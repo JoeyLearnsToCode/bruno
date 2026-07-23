@@ -29,7 +29,7 @@ const configOptions = {
   bytes: String,
   defaults: true,
   arrays: false,
-  objects: false,
+  objects: true,
   oneofs: true,
   json: true
 };
