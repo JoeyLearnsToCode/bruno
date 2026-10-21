@@ -22,8 +22,8 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Build Electron (Windows)
+        run: npm run build:electron:win
         shell: bash
-        run: bash scripts/build-electron.sh win
 
       - name: Upload artifacts to Release
         uses: softprops/action-gh-release@v2
