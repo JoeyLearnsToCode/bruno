@@ -53,7 +53,8 @@ jobs:
           NODE_OPTIONS: --max_old_space_size=8192
 
       - name: Build Electron (Windows)
-        run: npm run build:electron:win
+        # npm 在 Windows 上用 cmd.exe 执行 script，跑不了 .sh，所以直接调 bash
+        run: bash ./scripts/build-electron.sh win
         shell: bash
         env:
           NODE_OPTIONS: --max_old_space_size=8192
