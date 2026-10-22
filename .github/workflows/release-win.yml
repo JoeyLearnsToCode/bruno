@@ -2,6 +2,10 @@ name: Release Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号，如 4.2.3。留空时用 tag 去掉 v 前缀的版本（tag 触发）或 package.json 里的版本'
+        required: false
   push:
     tags:
       - 'v*'
@@ -29,6 +33,24 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Resolve version
+        id: version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+          elif [ "$REF_TYPE" = "tag" ]; then
+            VERSION="${REF_NAME#v}"
+          else
+            VERSION=$(node -p "require('./packages/bruno-electron/package.json').version")
+          fi
+          echo "Building version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
         shell: bash
@@ -51,6 +73,13 @@ jobs:
         shell: bash
         env:
           NODE_OPTIONS: --max_old_space_size=8192
+
+      - name: Set app version
+        run: npm pkg set version="$VERSION"
+        working-directory: packages/bruno-electron
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
 
       - name: Build Electron (Windows)
         # npm 在 Windows 上用 cmd.exe 执行 script，跑不了 .sh，所以直接调 bash
