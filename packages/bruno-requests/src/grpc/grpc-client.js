@@ -2,6 +2,7 @@ import { makeGenericClientConstructor, ChannelCredentials, Metadata, status, cre
 import { GrpcReflection } from 'grpc-js-reflection-client';
 import * as protoLoader from '@grpc/proto-loader';
 import { generateGrpcSampleMessage } from './grpcMessageGenerator';
+import { withMapFieldSupport } from './grpcMapFields';
 import * as tls from 'tls';
 import { isString } from 'lodash';
 import * as nodePath from 'node:path';
@@ -818,7 +819,9 @@ class GrpcClient {
           ...definition
         };
         modifiedMethod.type = this.#getMethodType(modifiedMethod);
-        return modifiedMethod;
+        // 反射拿到的是 descriptor，protobufjs 会丢掉 map 字段的 map 属性，
+        // 不补回来的话 map 字段只能按 entry 数组传，传对象会报 "array expected"
+        return withMapFieldSupport(modifiedMethod, configOptions);
       });
       methodsWithType.forEach((method) => {
         this.methods.set(method.path, method);
